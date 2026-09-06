@@ -1,4 +1,4 @@
-# REPROVIA Reproducible Science Infrastructure
+# REPROVIA — Reproducible Science Infrastructure
 
 <div align="center">
 
@@ -39,6 +39,7 @@ Workflow   Kubernetes   Provenance
 $$\text{User} \longrightarrow \text{React UI} \longrightarrow \text{Python/FastAPI} \longrightarrow \text{Kubernetes} \longrightarrow \text{Docker Jobs} \longrightarrow \text{Results \& Provenance}$$
 
 REPROVIA enables researchers to:
+
 - **Build**: Define reproducible Directed Acyclic Graph (DAG) computational workflows using a synchronized Monaco YAML Editor and interactive React Flow visual builder.
 - **Execute**: Run workflow steps as isolated Docker containers within Kubernetes namespaces (`Batch/v1 Jobs`) with resource requests/limits, volume mounts, and ConfigMaps/Secrets.
 - **Observe**: Stream live container stdout/stderr telemetry in real-time using Server-Sent Events (SSE).
@@ -71,8 +72,8 @@ REPROVIA enables researchers to:
 
 1. **Frontend (`frontend/`)**:
    - **Dual-Personality UI**:
-     - *Spatial Mode*: Architectural 3D perspective, computational layer transitions, and handwritten blueprint notes inspired by CERN.
-     - *Work Mode*: High-density operational interface with zero animation overhead.
+     - _Spatial Mode_: Architectural 3D perspective, computational layer transitions, and handwritten blueprint notes inspired by CERN.
+     - _Work Mode_: High-density operational interface with zero animation overhead.
    - **Horizontal Workspace Menu**: Expandable modular drawer grouping all 10 application areas.
    - **Synchronized Builder**: Monaco Editor on the left and React Flow on the right, driven by YAML as the single source of truth.
 
@@ -227,12 +228,12 @@ helm upgrade --install reprovia ./helm/reprovia \
 
 ## 👥 Roles & Access Control (RBAC)
 
-| Role | Permissions |
-| :--- | :--- |
-| **OWNER** | Full administrative control, cluster execution, secrets, and member management. |
-| **RESEARCHER** | Can create, execute, reproduce workflows and publish datasets. |
-| **DEVELOPER** | Can build workflows and configure container environments. |
-| **VIEWER** | Read-only access to published workflows, results, and provenance records. |
+| Role           | Permissions                                                                     |
+| :------------- | :------------------------------------------------------------------------------ |
+| **OWNER**      | Full administrative control, cluster execution, secrets, and member management. |
+| **RESEARCHER** | Can create, execute, reproduce workflows and publish datasets.                  |
+| **DEVELOPER**  | Can build workflows and configure container environments.                       |
+| **VIEWER**     | Read-only access to published workflows, results, and provenance records.       |
 
 ---
 
