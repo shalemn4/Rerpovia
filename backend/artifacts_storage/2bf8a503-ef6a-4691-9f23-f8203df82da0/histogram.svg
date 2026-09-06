@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%" style="background:#0c192c; font-family:'JetBrains Mono',monospace;">
+  <rect width="800" height="500" fill="#08111e"/>
+  <g stroke="#1e293b" stroke-width="1">
+    <line x1="80" y1="50" x2="80" y2="420" stroke="#64748b"/>
+    <line x1="80" y1="420" x2="740" y2="420" stroke="#64748b"/>
+    <line x1="80" y1="350" x2="740" y2="350" stroke-dasharray="4 4"/>
+    <line x1="80" y1="280" x2="740" y2="280" stroke-dasharray="4 4"/>
+    <line x1="80" y1="210" x2="740" y2="210" stroke-dasharray="4 4"/>
+    <line x1="80" y1="140" x2="740" y2="140" stroke-dasharray="4 4"/>
+  </g>
+  <text x="80" y="35" fill="#f8fafc" font-size="14" font-weight="bold">REPROVIA SCIENTIFIC OBSERVATION: Invariant Mass Diphoton Peak</text>
+  <text x="560" y="35" fill="#38bdf8" font-size="11">Run #2bf8a503 | 5.2σ Significance</text>
+  <!-- Background Distribution -->
+  <path d="M 100,380 Q 250,330 400,290 T 700,240" fill="none" stroke="#64748b" stroke-width="2" stroke-dasharray="3 3"/>
+  <!-- Peak Signal Fit -->
+  <path d="M 100,380 Q 300,340 370,220 Q 400,90 430,220 Q 500,310 700,240" fill="none" stroke="#38bdf8" stroke-width="3"/>
+  <!-- Highlight Peak Marker -->
+  <circle cx="400" cy="90" r="6" fill="#1d63ed" stroke="#ffffff" stroke-width="2"/>
+  <text x="415" y="95" fill="#ffffff" font-size="12" font-weight="bold">m_H = 125.09 GeV</text>
+  <!-- Axis Labels -->
+  <text x="350" y="460" fill="#94a3b8" font-size="12">Di-muon Invariant Mass m_μμ [GeV/c²]</text>
+  <text x="25" y="240" fill="#94a3b8" font-size="12" transform="rotate(-90 25 240)">Events / 2.5 GeV</text>
+</svg>

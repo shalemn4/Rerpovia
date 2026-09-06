@@ -1,0 +1,15 @@
+apiVersion: v2
+name: reprovia
+description: Production-oriented Helm Chart for REPROVIA Reproducible Science Infrastructure
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+maintainers:
+  - name: CERN Scientific Computing & Reprovia Core Team
+    email: hpc-reproducibility@cern.ch
+keywords:
+  - science
+  - reproducibility
+  - kubernetes
+  - workflows
+  - cern

@@ -1,0 +1,10 @@
+{
+  "run_id": "fcf354d9-dece-415a-aa55-f80defe0e7c7",
+  "experiment": "particle-analysis",
+  "convergence_sigma": 5.24,
+  "resonance_peak_gev": 125.09,
+  "events_processed": 1250000,
+  "detector_snr_db": 4.82,
+  "computational_nodes": 4,
+  "reproducibility_fingerprint": "sha256:d936245ec2ab459bbd461a5ae10fa432"
+}

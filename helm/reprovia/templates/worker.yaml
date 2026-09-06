@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-worker
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: reprovia-worker
+spec:
+  replicas: {{ .Values.worker.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: reprovia-worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: reprovia-worker
+    spec:
+      serviceAccountName: {{ .Release.Name }}-sa
+      containers:
+        - name: worker
+          image: "{{ .Values.worker.image.repository }}:{{ .Values.worker.image.tag }}"
+          imagePullPolicy: {{ .Values.worker.image.pullPolicy }}
+          env:
+            - name: EXECUTION_MODE
+              value: {{ .Values.api.executionMode | quote }}
+            - name: KUBERNETES_NAMESPACE
+              value: {{ .Values.api.workloadsNamespace | quote }}
+          resources:
+            {{- toYaml .Values.worker.resources | nindent 12 }}

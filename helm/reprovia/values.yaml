@@ -1,0 +1,98 @@
+global:
+  environment: production
+  domain: reprovia.cern.ch
+
+api:
+  replicaCount: 3
+  image:
+    repository: reprovia/api
+    pullPolicy: IfNotPresent
+    tag: "1.0.0"
+  service:
+    type: ClusterIP
+    port: 8000
+  resources:
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+  executionMode: kubernetes
+  workloadsNamespace: reprovia-workloads
+
+frontend:
+  replicaCount: 2
+  image:
+    repository: reprovia/ui
+    pullPolicy: IfNotPresent
+    tag: "1.0.0"
+  service:
+    type: ClusterIP
+    port: 80
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+worker:
+  replicaCount: 4
+  image:
+    repository: reprovia/orchestrator-worker
+    pullPolicy: IfNotPresent
+    tag: "1.0.0"
+  resources:
+    limits:
+      cpu: 4000m
+      memory: 8Gi
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+
+postgresql:
+  enabled: true
+  auth:
+    database: reprovia_prod
+    username: reprovia_admin
+    existingSecret: reprovia-postgres-secret
+  persistence:
+    enabled: true
+    storageClass: "cephfs-sc"
+    size: 50Gi
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/proxy-body-size: "500m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+  hosts:
+    - host: reprovia.cern.ch
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: reprovia-api
+        - path: /
+          pathType: Prefix
+          service: reprovia-ui
+  tls:
+    - secretName: reprovia-tls-cert
+      hosts:
+        - reprovia.cern.ch
+
+persistence:
+  scientificData:
+    enabled: true
+    storageClass: "cephfs-sc"
+    accessMode: ReadWriteMany
+    size: 500Gi
+    mountPath: /data
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  fsGroup: 10001
