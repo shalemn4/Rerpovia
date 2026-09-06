@@ -131,7 +131,7 @@ async def seed_initial_database():
             email="h.vance@cern.ch",
             name="Dr. Helena Vance",
             role=RoleEnum.OWNER,
-            institution="CERN EP-SFT / Reprovia"
+            institution="REPROVIA LABS / Open Science"
         )
         session.add(user)
 

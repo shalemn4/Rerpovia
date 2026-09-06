@@ -23,6 +23,7 @@ export const App: React.FC = () => {
   const [projectName, setProjectName] = useState<string>('Particle Resonance Investigation');
 
   useEffect(() => {
+    document.title = 'REPROVIA Reproducible Science Infrastructure';
     async function initUser() {
       try {
         const authData = await api.getCurrentUser();
@@ -105,7 +106,7 @@ export const App: React.FC = () => {
         <div style={{ display: 'flex', gap: '16px' }}>
           <span>MODE: {uiMode.toUpperCase()}</span>
           <span>RELEASE: v1.0.0</span>
-          <span>CERN OPEN SCIENCE</span>
+          <span>OPEN SCIENCE PLATFORM</span>
         </div>
       </footer>
     </div>

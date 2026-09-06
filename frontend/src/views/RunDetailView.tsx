@@ -360,7 +360,7 @@ export const RunDetailView: React.FC<RunDetailViewProps> = ({ runId, onNavigate 
                           {s.pod_name || `pod-${s.name}-88b1`}
                         </td>
                         <td style={{ fontFamily: 'var(--font-mono)', fontSize: '11px' }}>
-                          {s.exit_code !== null ? s.exit_code : '—'}
+                          {s.exit_code !== null ? s.exit_code : 'N/A'}
                         </td>
                         <td style={{ fontFamily: 'var(--font-mono)', fontSize: '11px' }}>
                           {s.cpu_usage || '480m'}
@@ -369,7 +369,7 @@ export const RunDetailView: React.FC<RunDetailViewProps> = ({ runId, onNavigate 
                           {s.memory_usage || '512Mi'}
                         </td>
                         <td style={{ fontFamily: 'var(--font-mono)', fontSize: '11px' }}>
-                          {s.duration_seconds ? `${s.duration_seconds.toFixed(1)}s` : '—'}
+                          {s.duration_seconds ? `${s.duration_seconds.toFixed(1)}s` : 'N/A'}
                         </td>
                       </tr>
                     ))}

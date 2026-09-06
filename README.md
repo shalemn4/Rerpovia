@@ -1,4 +1,4 @@
-# REPROVIA — Reproducible Science Infrastructure
+# REPROVIA Reproducible Science Infrastructure
 
 <div align="center">
 

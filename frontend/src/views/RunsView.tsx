@@ -153,7 +153,7 @@ export const RunsView: React.FC<RunsViewProps> = ({ onNavigate }) => {
                       {run.kubernetes_namespace}
                     </td>
                     <td style={{ fontFamily: 'var(--font-mono)', fontSize: '11px' }}>
-                      {run.duration_seconds ? `${run.duration_seconds.toFixed(1)}s` : '—'}
+                      {run.duration_seconds ? `${run.duration_seconds.toFixed(1)}s` : 'N/A'}
                     </td>
                     <td style={{ fontSize: '11px', color: 'var(--navy-muted)' }}>
                       {run.started_at ? new Date(run.started_at).toLocaleTimeString() : 'Queued'}

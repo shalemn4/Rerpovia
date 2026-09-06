@@ -36,7 +36,7 @@ async def lifespan(app: FastAPI):
     yield
 
 app = FastAPI(
-    title="REPROVIA — Reproducible Science Infrastructure",
+    title="REPROVIA Reproducible Science Infrastructure",
     description="Production-grade API for reproducible computational workflows, containerized execution, and immutable provenance.",
     version="1.0.0",
     lifespan=lifespan
@@ -85,7 +85,7 @@ async def readiness_check():
 @app.get("/", tags=["system"])
 async def root():
     return {
-        "service": "REPROVIA — Reproducible Science Infrastructure",
+        "service": "REPROVIA Reproducible Science Infrastructure",
         "institution": "CERN / Open Science Platform",
         "docs": "/docs",
         "version": "1.0.0"

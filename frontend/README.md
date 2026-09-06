@@ -1,4 +1,4 @@
-# REPROVIA — Frontend Application
+# REPROVIA Frontend Application
 
 Production-grade web interface for **REPROVIA** (Reproducible Science Infrastructure), built for computational research, workflow orchestration, live container observability, and immutable provenance tracking.
 

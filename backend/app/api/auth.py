@@ -29,7 +29,7 @@ async def get_current_user(db: AsyncSession = Depends(get_db)):
             email="h.vance@cern.ch",
             name="Dr. Helena Vance",
             role=RoleEnum.OWNER,
-            institution="CERN EP-SFT / Reprovia"
+            institution="REPROVIA LABS / Open Science"
         )
         db.add(user)
         

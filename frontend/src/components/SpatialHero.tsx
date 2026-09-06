@@ -16,13 +16,13 @@ export const SpatialHero: React.FC<SpatialHeroProps> = ({ onNavigate }) => {
         overflow: 'hidden'
       }}
     >
-      {/* CERN Blueprint Annotations */}
+      {/* Blueprint Annotations */}
       <div style={{ position: 'absolute', top: '24px', right: '48px', textAlign: 'right' }}>
         <span className="blueprint-annotation" style={{ fontSize: '1.2rem' }}>
-          CERN GENEVA ↓
+          REPROVIA LABS ↓
         </span>
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--navy-muted)', marginTop: '2px' }}>
-          FACILITY: 46.2330° N, 6.0557° E • LHC RUN-3
+          FACILITY: ZONE-01 • HIGH PERFORMANCE COMPUTING
         </div>
       </div>
 

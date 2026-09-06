@@ -280,7 +280,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                 {user?.name || 'Dr. H. Vance'}
               </span>
               <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: 'var(--electric-blue)' }}>
-                CERN EP-SFT • OWNER
+                REPROVIA LABS • OWNER
               </span>
             </div>
           </div>
