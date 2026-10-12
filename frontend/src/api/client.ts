@@ -133,10 +133,71 @@ export const api = {
     return res.json();
   },
 
+  async createDataset(data: { project_id?: string; name: string; description?: string; owner?: string; tags?: string[]; version_tag?: string; file_format?: string }): Promise<any> {
+    const res = await fetch(`${API_BASE}/datasets`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error('Failed to create dataset');
+    return res.json();
+  },
+
+  async uploadDataset(formData: FormData): Promise<any> {
+    const res = await fetch(`${API_BASE}/datasets/upload`, {
+      method: 'POST',
+      body: formData
+    });
+    if (!res.ok) throw new Error('Failed to upload dataset file');
+    return res.json();
+  },
+
+  getDatasetDownloadUrl(datasetId: string): string {
+    return `${API_BASE}/datasets/${datasetId}/download`;
+  },
+
   // Artifacts
+  async listArtifacts(runId?: string): Promise<any[]> {
+    const url = runId ? `${API_BASE}/artifacts?run_id=${runId}` : `${API_BASE}/artifacts`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Failed to list artifacts');
+    return res.json();
+  },
+
   async getArtifact(artifactId: string): Promise<any> {
     const res = await fetch(`${API_BASE}/artifacts/${artifactId}`);
     if (!res.ok) throw new Error('Failed to load artifact');
+    return res.json();
+  },
+
+  getArtifactRawUrl(artifactId: string, download: boolean = false): string {
+    return `${API_BASE}/artifacts/${artifactId}/raw${download ? '?download=true' : ''}`;
+  },
+
+  // Templates
+  async listTemplates(): Promise<any[]> {
+    const res = await fetch(`${API_BASE}/workflows/templates`);
+    if (!res.ok) throw new Error('Failed to load workflow templates');
+    return res.json();
+  },
+
+  // Members & RBAC
+  async listMembers(): Promise<any[]> {
+    const res = await fetch(`${API_BASE}/auth/members`);
+    if (!res.ok) throw new Error('Failed to load organization members');
+    return res.json();
+  },
+
+  async inviteMember(data: { name: string; email: string; role: string; institution?: string }): Promise<any> {
+    const res = await fetch(`${API_BASE}/auth/members`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || 'Failed to invite member');
+    }
     return res.json();
   },
 

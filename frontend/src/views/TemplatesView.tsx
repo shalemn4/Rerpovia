@@ -1,45 +1,36 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FileCode2, ArrowRight, Layers, Cpu, Database } from 'lucide-react';
+import { api } from '../api/client';
+import { TemplateItem } from '../types';
 
 interface TemplatesViewProps {
-  onNavigate: (tab: string, runId?: string) => void;
+  onNavigate: (tab: string, runId?: string, builderOpts?: any) => void;
 }
 
 export const TemplatesView: React.FC<TemplatesViewProps> = ({ onNavigate }) => {
-  const templates = [
-    {
-      title: 'Particle Collision Analysis',
-      category: 'High Energy Physics',
-      description: 'Calibrated ATLAS LHC invariant mass reconstruction with Monte Carlo Breit-Wigner resonance fitting.',
-      steps: ['preprocess', 'analyze', 'visualize'],
-      tags: ['CERN', 'Physics', 'ROOT', 'Higgs'],
-      yaml: 'reprovia-particle-analysis'
-    },
-    {
-      title: 'Monte Carlo Quantum Simulation',
-      category: 'Quantum Computing & Field Theory',
-      description: 'Lattice quantum field simulation measuring 4D correlation functions with GPU acceleration.',
-      steps: ['lattice_init', 'thermalize', 'sample_observables'],
-      tags: ['Quantum', 'Simulation', 'Lattice', 'GPU'],
-      yaml: 'reprovia-monte-carlo'
-    },
-    {
-      title: 'Deep Learning Genomic Variant Classifier',
-      category: 'Computational Biology',
-      description: 'Functional scoring of non-coding regulatory genomic variants using deep residual neural networks.',
-      steps: ['vcf_qc', 'deep_score', 'aggregate'],
-      tags: ['Bioinformatics', 'Genomics', 'Deep Learning'],
-      yaml: 'reprovia-genomics'
-    },
-    {
-      title: 'Astronomical Image Deconvolution',
-      category: 'Astrophysics',
-      description: 'Multi-wavelength interferometry optical transfer function restoration for telescope arrays.',
-      steps: ['load_fits', 'richardson_lucy', 'export_skymap'],
-      tags: ['Astronomy', 'Images', 'FFT'],
-      yaml: 'reprovia-astro'
+  const [templates, setTemplates] = useState<TemplateItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const data = await api.listTemplates();
+        setTemplates(data);
+      } catch (err) {
+        console.error('Failed to load templates:', err);
+      } finally {
+        setLoading(false);
+      }
     }
-  ];
+    load();
+  }, []);
+
+  const handleUseTemplate = (tpl: TemplateItem) => {
+    onNavigate('builder', undefined, {
+      yamlContent: tpl.yaml_content,
+      name: tpl.title
+    });
+  };
 
   return (
     <div style={{ padding: '32px 40px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
@@ -51,8 +42,8 @@ export const TemplatesView: React.FC<TemplatesViewProps> = ({ onNavigate }) => {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '24px' }}>
-        {templates.map((tpl, idx) => (
-          <div key={idx} className="arch-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+        {templates.map((tpl) => (
+          <div key={tpl.id} className="arch-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
             <div>
               <div className="arch-card-header">
                 <span className="arch-card-title">{tpl.title}</span>
@@ -94,7 +85,7 @@ export const TemplatesView: React.FC<TemplatesViewProps> = ({ onNavigate }) => {
               <button
                 className="btn-reprovia-primary"
                 style={{ fontSize: '11px', padding: '6px 14px' }}
-                onClick={() => onNavigate('builder')}
+                onClick={() => handleUseTemplate(tpl)}
               >
                 <span>Use Template</span>
                 <ArrowRight size={12} />

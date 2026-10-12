@@ -4,7 +4,7 @@ import { api } from '../api/client';
 import { WorkflowItem } from '../types';
 
 interface WorkflowsViewProps {
-  onNavigate: (tab: string, runId?: string) => void;
+  onNavigate: (tab: string, runId?: string, builderOpts?: any) => void;
 }
 
 export const WorkflowsView: React.FC<WorkflowsViewProps> = ({ onNavigate }) => {
@@ -74,7 +74,7 @@ export const WorkflowsView: React.FC<WorkflowsViewProps> = ({ onNavigate }) => {
                 <button
                   className="btn-reprovia-secondary"
                   style={{ fontSize: '11px', padding: '4px 10px' }}
-                  onClick={() => onNavigate('builder')}
+                  onClick={() => onNavigate('builder', undefined, { workflowId: wf.id, name: wf.name })}
                 >
                   <span>Open in Builder</span>
                   <ArrowUpRight size={12} />

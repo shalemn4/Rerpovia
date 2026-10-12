@@ -1,15 +1,54 @@
-import React, { useState } from 'react';
-import { Archive, FileText, Download, CheckCircle, ExternalLink, Code, Eye } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Archive, FileText, Download, CheckCircle, ExternalLink, Code, Eye, Search, RefreshCw } from 'lucide-react';
+import { api } from '../api/client';
+import { ArtifactItem } from '../types';
 
 export const ArtifactsView: React.FC = () => {
-  const [selectedFile, setSelectedFile] = useState<string>('summary.json');
+  const [artifacts, setArtifacts] = useState<ArtifactItem[]>([]);
+  const [selectedArtifact, setSelectedArtifact] = useState<ArtifactItem | null>(null);
+  const [previewContent, setPreviewContent] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  const artifacts = [
-    { name: 'summary.json', type: 'json', size: '3.4 KB', checksum: '7f83b1657ff1fc53b92dc18148a1d65d', run: 'Run #184' },
-    { name: 'analysis.csv', type: 'csv', size: '14.2 KB', checksum: 'a84f3c9e112d8a435b8813bcfe7842c1', run: 'Run #184' },
-    { name: 'histogram.svg', type: 'svg', size: '28.1 KB', checksum: '1a84f3c955e8bc4219a1fc4498aa2b10', run: 'Run #184' },
-    { name: 'report.pdf', type: 'pdf', size: '412 KB', checksum: 'e3b0c44298fc1c149afbf4c8996fb924', run: 'Run #184' }
-  ];
+  const loadArtifacts = async () => {
+    setLoading(true);
+    try {
+      const data = await api.listArtifacts();
+      setArtifacts(data);
+      if (data.length > 0) {
+        setSelectedArtifact(data[0]);
+        loadArtifactPreview(data[0].id);
+      }
+    } catch (err) {
+      console.error('Failed to load artifacts:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadArtifactPreview = async (artId: string) => {
+    try {
+      const detail = await api.getArtifact(artId);
+      setPreviewContent(detail.preview_text || null);
+    } catch (err) {
+      console.error('Failed to load preview:', err);
+      setPreviewContent(null);
+    }
+  };
+
+  useEffect(() => {
+    loadArtifacts();
+  }, []);
+
+  const handleSelectArtifact = (art: ArtifactItem) => {
+    setSelectedArtifact(art);
+    loadArtifactPreview(art.id);
+  };
+
+  const filteredArtifacts = artifacts.filter((a) =>
+    a.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (a.step_name && a.step_name.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
   return (
     <div style={{ padding: '32px 40px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
@@ -20,128 +59,143 @@ export const ArtifactsView: React.FC = () => {
           </div>
           <h2 className="h2-editorial">Artifact Tree & Previews</h2>
         </div>
+
+        <button className="btn-reprovia-secondary" onClick={loadArtifacts}>
+          <RefreshCw size={13} className={loading ? 'spin' : ''} />
+          <span>Refresh Artifacts</span>
+        </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '360px 1fr', gap: '24px' }}>
         {/* Artifact Directory Tree */}
-        <div className="arch-card">
+        <div className="arch-card" style={{ display: 'flex', flexDirection: 'column', maxHeight: '78vh' }}>
           <div className="arch-card-header">
             <span className="arch-card-title">
               <Archive size={14} />
-              <span>results/</span>
+              <span>results/ ({artifacts.length})</span>
             </span>
-            <span className="badge-arch badge-matched">4 ARTIFACTS</span>
+            <span className="badge-arch badge-matched">VERIFIED</span>
           </div>
-          <div style={{ padding: '12px' }}>
-            {artifacts.map((art) => (
-              <div
-                key={art.name}
-                onClick={() => setSelectedFile(art.name)}
+
+          <div style={{ padding: '10px 12px', borderBottom: 'var(--border-hairline)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--bg-cream-alt)', padding: '6px 10px', borderRadius: '2px' }}>
+              <Search size={12} color="var(--navy-muted)" />
+              <input
+                type="text"
+                placeholder="Filter artifacts..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 style={{
-                  padding: '10px 12px',
-                  marginBottom: '8px',
-                  background: selectedFile === art.name ? 'var(--bg-cream-alt)' : '#fff',
-                  border: selectedFile === art.name ? '1.5px solid var(--electric-blue)' : 'var(--border-hairline)',
-                  borderRadius: '2px',
-                  cursor: 'pointer'
+                  background: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  fontSize: '11px',
+                  fontFamily: 'var(--font-mono)',
+                  width: '100%'
                 }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ fontWeight: 600, fontSize: '12px', color: 'var(--navy-900)' }}>
-                    {art.name}
-                  </div>
-                  <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--navy-muted)' }}>
-                    {art.size}
-                  </span>
-                </div>
-                <div style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--navy-muted)', marginTop: '4px' }}>
-                  sha256:{art.checksum.slice(0, 12)}...
-                </div>
+              />
+            </div>
+          </div>
+
+          <div style={{ padding: '12px', flex: 1, overflowY: 'auto' }}>
+            {filteredArtifacts.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '30px 0', fontSize: '12px', color: 'var(--navy-muted)' }}>
+                {loading ? 'Loading artifacts...' : 'No artifacts found.'}
               </div>
-            ))}
+            ) : (
+              filteredArtifacts.map((art) => (
+                <div
+                  key={art.id}
+                  onClick={() => handleSelectArtifact(art)}
+                  style={{
+                    padding: '10px 12px',
+                    marginBottom: '8px',
+                    background: selectedArtifact?.id === art.id ? 'var(--bg-cream-alt)' : '#fff',
+                    border: selectedArtifact?.id === art.id ? '1.5px solid var(--electric-blue)' : 'var(--border-hairline)',
+                    borderRadius: '2px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ fontWeight: 600, fontSize: '12px', color: 'var(--navy-900)' }}>
+                      {art.name}
+                    </div>
+                    <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--navy-muted)' }}>
+                      {(art.size_bytes / 1024).toFixed(1)} KB
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                    <span style={{ fontSize: '10px', fontFamily: 'var(--font-mono)', color: 'var(--electric-blue)' }}>
+                      {art.run_number ? `Run #${art.run_number}` : art.step_name || 'Output'}
+                    </span>
+                    <span style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', color: 'var(--navy-muted)' }}>
+                      sha256:{art.checksum.slice(0, 10)}...
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
-        {/* Artifact Preview */}
-        <div className="arch-card" style={{ display: 'flex', flexDirection: 'column' }}>
-          <div className="arch-card-header">
+        {/* Artifact Preview & Inspector */}
+        <div className="arch-card" style={{ display: 'flex', flexDirection: 'column', maxHeight: '78vh' }}>
+          <div className="arch-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span className="arch-card-title">
               <Eye size={14} />
-              <span>Preview: {selectedFile}</span>
+              <span>Preview: {selectedArtifact?.name || 'No selection'}</span>
             </span>
-            <span className="badge-arch badge-matched">SHA-256 VERIFIED</span>
-          </div>
-          <div className="arch-card-body" style={{ flex: 1, overflowY: 'auto' }}>
-            {selectedFile === 'summary.json' && (
-              <pre style={{ background: 'var(--navy-900)', color: '#38bdf8', padding: '16px', fontSize: '12px', fontFamily: 'var(--font-mono)', borderRadius: '2px' }}>
-{`{
-  "run_id": "run-184-cern-baseline",
-  "experiment": "particle-collision-analysis",
-  "convergence_sigma": 5.24,
-  "resonance_peak_gev": 125.09,
-  "events_processed": 1250000,
-  "detector_snr_db": 4.82,
-  "computational_nodes": 4,
-  "reproducibility_fingerprint": "sha256:7f83b1657ff1fc53b92dc18148a1d65dfc2d4b1fa3d677284addd200126d9069"
-}`}
-              </pre>
-            )}
 
-            {selectedFile === 'analysis.csv' && (
-              <table className="arch-table">
-                <thead>
-                  <tr>
-                    <th>Bin</th>
-                    <th>Energy Bin (GeV)</th>
-                    <th>Signal Counts</th>
-                    <th>Background</th>
-                    <th>Uncertainty</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    ['01', '110.0-112.5', '420', '412', '±20.5'],
-                    ['02', '112.5-115.0', '490', '465', '±22.1'],
-                    ['03', '115.0-117.5', '610', '540', '±24.7'],
-                    ['04', '117.5-120.0', '850', '680', '±29.1'],
-                    ['05', '120.0-122.5', '1340', '890', '±36.6'],
-                    ['06', '122.5-125.0', '2450', '1105', '±49.5'],
-                    ['07', '125.0-127.5', '2890', '1130', '±53.8'],
-                    ['08', '127.5-130.0', '1920', '950', '±43.8']
-                  ].map((r, i) => (
-                    <tr key={i}>
-                      <td style={{ fontFamily: 'var(--font-mono)' }}>{r[0]}</td>
-                      <td style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>{r[1]}</td>
-                      <td style={{ color: 'var(--electric-blue)', fontWeight: 600 }}>{r[2]}</td>
-                      <td>{r[3]}</td>
-                      <td style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--navy-muted)' }}>{r[4]}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-
-            {selectedFile === 'histogram.svg' && (
-              <div style={{ background: '#08111e', padding: '16px', borderRadius: '2px', border: '1.5px solid var(--navy-800)' }}>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="340" style={{ background: '#08111e', fontFamily: 'var(--font-mono)' }}>
-                  <rect width="800" height="450" fill="#08111e"/>
-                  <line x1="80" y1="50" x2="80" y2="380" stroke="#475569"/>
-                  <line x1="80" y1="380" x2="740" y2="380" stroke="#475569"/>
-                  <text x="80" y="32" fill="#f8fafc" fontSize="13" fontWeight="bold">REPROVIA OBSERVATION: INVARIANT MASS DIPHOTON RESONANCE</text>
-                  <path d="M 100,350 Q 300,310 370,200 Q 400,80 430,200 Q 500,280 700,210" fill="none" stroke="#38bdf8" strokeWidth="3"/>
-                  <circle cx="400" cy="80" r="6" fill="#1d63ed" stroke="#ffffff" strokeWidth="2"/>
-                  <text x="415" y="85" fill="#ffffff" fontSize="12" fontWeight="bold">m_H = 125.09 GeV (5.24σ)</text>
-                </svg>
+            {selectedArtifact && (
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <span className="badge-arch badge-matched">SHA-256 VERIFIED</span>
+                <a
+                  href={api.getArtifactRawUrl(selectedArtifact.id, true)}
+                  download={selectedArtifact.name}
+                  className="btn-reprovia-secondary"
+                  style={{ fontSize: '11px', padding: '3px 8px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}
+                >
+                  <Download size={12} />
+                  <span>Download</span>
+                </a>
               </div>
             )}
+          </div>
 
-            {selectedFile === 'report.pdf' && (
-              <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--navy-muted)' }}>
-                <FileText size={48} color="var(--navy-800)" style={{ margin: '0 auto 12px auto' }} />
-                <div style={{ fontWeight: 600, color: 'var(--navy-900)' }}>CERN-REPROVIA-REPORT-2026.pdf</div>
-                <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', marginTop: '4px' }}>
-                  Cryptographically signed scientific preprint (412 KB)
+          <div className="arch-card-body" style={{ flex: 1, overflowY: 'auto' }}>
+            {selectedArtifact ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {/* Metadata strip */}
+                <div style={{ display: 'flex', gap: '20px', padding: '10px 14px', background: 'var(--bg-cream-alt)', border: 'var(--border-hairline)', borderRadius: '2px', fontSize: '11px', fontFamily: 'var(--font-mono)' }}>
+                  <div>TYPE: <strong>{selectedArtifact.file_type.toUpperCase()}</strong></div>
+                  <div>SIZE: <strong>{selectedArtifact.size_bytes} bytes</strong></div>
+                  <div>STEP: <strong>{selectedArtifact.step_name || 'N/A'}</strong></div>
+                  <div style={{ color: 'var(--navy-muted)' }}>HASH: <span style={{ color: 'var(--electric-blue)' }}>{selectedArtifact.checksum}</span></div>
                 </div>
+
+                {/* Content preview */}
+                {selectedArtifact.file_type === 'svg' ? (
+                  <div
+                    style={{ background: '#08111e', padding: '16px', borderRadius: '2px', border: '1.5px solid var(--navy-800)' }}
+                    dangerouslySetInnerHTML={{ __html: previewContent || '' }}
+                  />
+                ) : previewContent ? (
+                  <pre style={{ background: 'var(--navy-900)', color: '#38bdf8', padding: '16px', fontSize: '12px', fontFamily: 'var(--font-mono)', borderRadius: '2px', overflowX: 'auto', maxHeight: '55vh' }}>
+                    {previewContent}
+                  </pre>
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--navy-muted)' }}>
+                    <FileText size={48} color="var(--navy-800)" style={{ margin: '0 auto 12px auto' }} />
+                    <div style={{ fontWeight: 600, color: 'var(--navy-900)' }}>{selectedArtifact.name}</div>
+                    <div style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', marginTop: '4px' }}>
+                      Binary scientific output artifact. Click download to inspect in external workbench.
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--navy-muted)', fontFamily: 'var(--font-mono)', fontSize: '12px' }}>
+                Select an artifact from the list to preview content.
               </div>
             )}
           </div>

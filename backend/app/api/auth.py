@@ -105,3 +105,59 @@ async def get_roles():
             }
         ]
     }
+
+class InviteMemberRequest(BaseModel):
+    name: str
+    email: str
+    role: str = "RESEARCHER"
+    institution: str = "CERN / Reprovia Open Science"
+
+@router.get("/members")
+async def list_members(db: AsyncSession = Depends(get_db)):
+    """Lists organization and project members with their assigned RBAC roles."""
+    users = (await db.execute(select(User).order_by(User.created_at.asc()))).scalars().all()
+    return [
+        {
+            "id": u.id,
+            "name": u.name,
+            "email": u.email,
+            "role": u.role.value,
+            "team": u.institution,
+            "joined": u.created_at.strftime("%Y-%m-%d")
+        }
+        for u in users
+    ]
+
+@router.post("/members")
+async def invite_member(req: InviteMemberRequest, db: AsyncSession = Depends(get_db)):
+    """Invites and provisions a new researcher in the organization."""
+    # Check if already exists
+    existing = (await db.execute(select(User).where(User.email == req.email))).scalars().first()
+    if existing:
+        raise HTTPException(status_code=400, detail="User with this email already exists")
+
+    try:
+        role_enum = RoleEnum(req.role.upper())
+    except ValueError:
+        role_enum = RoleEnum.RESEARCHER
+
+    import uuid
+    new_user = User(
+        id=f"usr-{uuid.uuid4().hex[:8]}",
+        email=req.email,
+        name=req.name,
+        role=role_enum,
+        institution=req.institution
+    )
+    db.add(new_user)
+    await db.commit()
+
+    return {
+        "id": new_user.id,
+        "name": new_user.name,
+        "email": new_user.email,
+        "role": new_user.role.value,
+        "team": new_user.institution,
+        "joined": new_user.created_at.strftime("%Y-%m-%d")
+    }
+

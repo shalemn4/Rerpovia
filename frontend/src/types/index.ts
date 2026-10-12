@@ -81,12 +81,35 @@ export interface LogEntry {
 
 export interface ArtifactItem {
   id: string;
+  run_id?: string;
+  run_number?: number;
+  step_name?: string;
   name: string;
   file_type: string;
   size_bytes: number;
   checksum: string;
   storage_path: string;
   preview_text?: string;
+  created_at?: string;
+}
+
+export interface TemplateItem {
+  id: string;
+  title: string;
+  category: string;
+  description: string;
+  steps: string[];
+  tags: string[];
+  yaml_content: string;
+}
+
+export interface MemberItem {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  team: string;
+  joined: string;
 }
 
 export interface RunDetail extends RunItem {

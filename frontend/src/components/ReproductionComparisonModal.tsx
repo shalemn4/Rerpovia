@@ -1,5 +1,5 @@
-import React from 'react';
-import { X, CheckCircle, AlertTriangle, HelpCircle, ArrowRight, ShieldAlert, GitCompare } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, CheckCircle, AlertTriangle, HelpCircle, ArrowRight, ShieldAlert, GitCompare, Download, Copy, Check } from 'lucide-react';
 import { ReproductionReport } from '../types';
 
 interface ReproductionComparisonModalProps {
@@ -10,6 +10,39 @@ interface ReproductionComparisonModalProps {
 export const ReproductionComparisonModal: React.FC<ReproductionComparisonModalProps> = ({ report, onClose }) => {
   const isMatched = report.overall_verdict === 'MATCHED';
   const isDifferent = report.overall_verdict === 'DIFFERENT';
+  const [copied, setCopied] = useState(false);
+
+  const handleDownloadJson = () => {
+    const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(report, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute('href', dataStr);
+    downloadAnchor.setAttribute('download', `reprovia_report_run${report.original_run_number}_vs_run${report.reproduced_run_number}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
+  const handleCopyMarkdown = () => {
+    const md = `# REPROVIA Scientific Reproduction Verification Certificate
+
+**Baseline Run:** #${report.original_run_number} (${report.original_run_id})
+**Reproduction Run:** #${report.reproduced_run_number} (${report.reproduced_run_id})
+**Overall Verdict:** ${report.summary_verdict} (${report.overall_verdict})
+**Duration Delta:** ${report.duration_difference_seconds !== null ? report.duration_difference_seconds + 's' : 'N/A'}
+
+## Evaluation Matrix
+
+| Vector | Status | Baseline | Reproduction | Notes |
+|---|---|---|---|---|
+${report.comparison_matrix.map(m => `| ${m.category} | ${m.status} | ${m.original_value} | ${m.reproduced_value} | ${m.details} |`).join('\n')}
+
+---
+*Cryptographically verified by REPROVIA Reproducible Science Infrastructure.*
+`;
+    navigator.clipboard.writeText(md);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
 
   return (
     <div
@@ -31,7 +64,7 @@ export const ReproductionComparisonModal: React.FC<ReproductionComparisonModalPr
       <div
         className="arch-card"
         style={{
-          width: '900px',
+          width: '950px',
           maxWidth: '95vw',
           maxHeight: '90vh',
           display: 'flex',
@@ -70,7 +103,9 @@ export const ReproductionComparisonModal: React.FC<ReproductionComparisonModalPr
             borderBottom: 'var(--border-hairline)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between'
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '12px'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -100,14 +135,24 @@ export const ReproductionComparisonModal: React.FC<ReproductionComparisonModalPr
             </div>
           </div>
 
-          {report.duration_difference_seconds !== null && (
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', textAlign: 'right' }}>
-              <div style={{ color: 'var(--navy-muted)' }}>EXECUTION DURATION DELTA</div>
-              <div style={{ fontWeight: 700, color: 'var(--navy-900)' }}>
-                {report.duration_difference_seconds > 0 ? `+${report.duration_difference_seconds}s` : `${report.duration_difference_seconds}s`}
-              </div>
-            </div>
-          )}
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <button
+              onClick={handleCopyMarkdown}
+              className="btn-reprovia-secondary"
+              style={{ fontSize: '11px', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '5px' }}
+            >
+              {copied ? <Check size={12} color="var(--status-matched)" /> : <Copy size={12} />}
+              <span>{copied ? 'Copied MD' : 'Copy MD'}</span>
+            </button>
+            <button
+              onClick={handleDownloadJson}
+              className="btn-reprovia-secondary"
+              style={{ fontSize: '11px', padding: '4px 10px', display: 'flex', alignItems: 'center', gap: '5px' }}
+            >
+              <Download size={12} />
+              <span>Export JSON</span>
+            </button>
+          </div>
         </div>
 
         {/* Comparison Matrix Table */}
@@ -168,7 +213,7 @@ export const ReproductionComparisonModal: React.FC<ReproductionComparisonModalPr
           }}
         >
           <span style={{ fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--navy-muted)' }}>
-            REPROVIA EVALUATOR v1.0 • CERN SCIENTIFIC COMPUTING STANDARDS
+            REPROVIA EVALUATOR v1.0 • CERN OPEN SCIENCE COMPUTING STANDARDS
           </span>
           <button className="btn-reprovia-primary" onClick={onClose}>
             Close Report

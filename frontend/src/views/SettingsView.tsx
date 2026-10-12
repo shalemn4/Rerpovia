@@ -1,17 +1,62 @@
-import React from 'react';
-import { Settings, Shield, Server, HardDrive, Key, Save } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Settings, Shield, Server, HardDrive, Key, Save, CheckCircle } from 'lucide-react';
 
 export const SettingsView: React.FC = () => {
+  const [execMode, setExecMode] = useState('mock');
+  const [namespace, setNamespace] = useState('reprovia-workloads');
+  const [storageProvider, setStorageProvider] = useState('local');
+  const [strictProvenance, setStrictProvenance] = useState(true);
+  const [savedMsg, setSavedMsg] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('reprovia_settings');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.execMode) setExecMode(parsed.execMode);
+        if (parsed.namespace) setNamespace(parsed.namespace);
+        if (parsed.storageProvider) setStorageProvider(parsed.storageProvider);
+        if (parsed.strictProvenance !== undefined) setStrictProvenance(parsed.strictProvenance);
+      } catch {}
+    }
+  }, []);
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    localStorage.setItem('reprovia_settings', JSON.stringify({
+      execMode,
+      namespace,
+      storageProvider,
+      strictProvenance
+    }));
+    setSavedMsg(true);
+    setTimeout(() => setSavedMsg(false), 3000);
+  };
+
   return (
     <div style={{ padding: '32px 40px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
-      <div>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--electric-blue)', fontWeight: 600, letterSpacing: '0.08em' }}>
-          PLATFORM GOVERNANCE & EXECUTION CONFIGURATION
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        <div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--electric-blue)', fontWeight: 600, letterSpacing: '0.08em' }}>
+            PLATFORM GOVERNANCE & EXECUTION CONFIGURATION
+          </div>
+          <h2 className="h2-editorial">Platform Settings</h2>
         </div>
-        <h2 className="h2-editorial">Platform Settings</h2>
+
+        <button className="btn-reprovia-primary" onClick={handleSave}>
+          <Save size={14} />
+          <span>Save Configuration</span>
+        </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '24px' }}>
+      {savedMsg && (
+        <div style={{ padding: '12px 16px', background: 'var(--bg-cream-alt)', border: '1.5px solid var(--status-matched)', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontFamily: 'var(--font-mono)', color: 'var(--navy-900)' }}>
+          <CheckCircle size={15} color="var(--status-matched)" />
+          <span>Platform governance preferences saved successfully.</span>
+        </div>
+      )}
+
+      <form onSubmit={handleSave} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))', gap: '24px' }}>
         {/* Execution Mode Settings */}
         <div className="arch-card">
           <div className="arch-card-header">
@@ -27,7 +72,8 @@ export const SettingsView: React.FC = () => {
                 CURRENT EXECUTION ADAPTER
               </label>
               <select
-                defaultValue="mock"
+                value={execMode}
+                onChange={(e) => setExecMode(e.target.value)}
                 style={{
                   width: '100%',
                   padding: '8px 12px',
@@ -48,7 +94,8 @@ export const SettingsView: React.FC = () => {
               </label>
               <input
                 type="text"
-                defaultValue="reprovia-workloads"
+                value={namespace}
+                onChange={(e) => setNamespace(e.target.value)}
                 style={{
                   width: '100%',
                   padding: '8px 12px',
@@ -81,7 +128,8 @@ export const SettingsView: React.FC = () => {
                 STORAGE PROVIDER
               </label>
               <select
-                defaultValue="local"
+                value={storageProvider}
+                onChange={(e) => setStorageProvider(e.target.value)}
                 style={{
                   width: '100%',
                   padding: '8px 12px',
@@ -118,7 +166,7 @@ export const SettingsView: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+      </form>
     </div>
   );
 };

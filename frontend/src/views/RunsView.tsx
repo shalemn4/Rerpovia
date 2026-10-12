@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { PlayCircle, CheckCircle, XCircle, RotateCcw, ArrowUpRight, Search, Filter, ShieldCheck } from 'lucide-react';
+import { PlayCircle, CheckCircle, XCircle, RotateCcw, ArrowUpRight, Search, Filter, ShieldCheck, GitCompare, RefreshCw } from 'lucide-react';
 import { api } from '../api/client';
-import { RunItem } from '../types';
+import { RunItem, ReproductionReport } from '../types';
+import { ReproductionComparisonModal } from '../components/ReproductionComparisonModal';
 
 interface RunsViewProps {
   onNavigate: (tab: string, runId?: string) => void;
@@ -12,20 +13,32 @@ export const RunsView: React.FC<RunsViewProps> = ({ onNavigate }) => {
   const [filterStatus, setFilterStatus] = useState<string>('ALL');
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [loading, setLoading] = useState(true);
+  const [comparisonReport, setComparisonReport] = useState<ReproductionReport | null>(null);
+
+  const fetchRuns = async () => {
+    setLoading(true);
+    try {
+      const data = await api.listRuns();
+      setRuns(data);
+    } catch (err) {
+      console.error('Failed to load runs:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function fetchRuns() {
-      try {
-        const data = await api.listRuns();
-        setRuns(data);
-      } catch (err) {
-        console.error('Failed to load runs:', err);
-      } finally {
-        setLoading(false);
-      }
-    }
     fetchRuns();
   }, []);
+
+  const handleQuickCompare = async (originalRunId: string, reproducedRunId: string) => {
+    try {
+      const report = await api.compareRuns(originalRunId, reproducedRunId);
+      setComparisonReport(report);
+    } catch (err) {
+      console.error('Failed to compare runs:', err);
+    }
+  };
 
   const filteredRuns = runs.filter((r) => {
     if (filterStatus !== 'ALL' && r.status !== filterStatus) return false;
@@ -44,10 +57,16 @@ export const RunsView: React.FC<RunsViewProps> = ({ onNavigate }) => {
           <h2 className="h2-editorial">Computational Runs</h2>
         </div>
 
-        <button className="btn-reprovia-primary" onClick={() => onNavigate('builder')}>
-          <span>Launch New Run</span>
-          <ArrowUpRight size={14} />
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button className="btn-reprovia-secondary" onClick={fetchRuns}>
+            <RefreshCw size={13} className={loading ? 'spin' : ''} />
+            <span>Refresh</span>
+          </button>
+          <button className="btn-reprovia-primary" onClick={() => onNavigate('builder')}>
+            <span>Launch New Run</span>
+            <ArrowUpRight size={14} />
+          </button>
+        </div>
       </div>
 
       {/* Filter and Search Bar */}
@@ -96,7 +115,7 @@ export const RunsView: React.FC<RunsViewProps> = ({ onNavigate }) => {
           <table className="arch-table">
             <thead>
               <tr>
-                <th style={{ width: '130px' }}>Run Index</th>
+                <th style={{ width: '140px' }}>Run Index</th>
                 <th>Workflow Name</th>
                 <th style={{ width: '130px' }}>Lifecycle Status</th>
                 <th>Researcher / Trigger</th>
@@ -104,14 +123,14 @@ export const RunsView: React.FC<RunsViewProps> = ({ onNavigate }) => {
                 <th>Namespace</th>
                 <th>Duration</th>
                 <th>Started At</th>
-                <th style={{ width: '160px', textAlign: 'right' }}>Operational Actions</th>
+                <th style={{ width: '180px', textAlign: 'right' }}>Operational Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredRuns.length === 0 ? (
                 <tr>
                   <td colSpan={9} style={{ textAlign: 'center', padding: '32px 0', color: 'var(--navy-muted)' }}>
-                    No execution runs found.
+                    {loading ? 'Loading computational runs...' : 'No execution runs found.'}
                   </td>
                 </tr>
               ) : (
@@ -159,7 +178,18 @@ export const RunsView: React.FC<RunsViewProps> = ({ onNavigate }) => {
                       {run.started_at ? new Date(run.started_at).toLocaleTimeString() : 'Queued'}
                     </td>
                     <td style={{ textAlign: 'right' }}>
-                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                      <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                        {run.reproduction_of_run_id && run.status === 'COMPLETED' && (
+                          <button
+                            className="btn-reprovia-secondary"
+                            style={{ fontSize: '11px', padding: '3px 8px', color: 'var(--electric-blue)', borderColor: 'var(--electric-blue)', display: 'flex', alignItems: 'center', gap: '4px' }}
+                            onClick={() => handleQuickCompare(run.reproduction_of_run_id!, run.id)}
+                            title="Compare against baseline run"
+                          >
+                            <GitCompare size={11} />
+                            <span>Compare</span>
+                          </button>
+                        )}
                         <button
                           className="btn-reprovia-secondary"
                           style={{ fontSize: '11px', padding: '3px 8px' }}
@@ -176,6 +206,14 @@ export const RunsView: React.FC<RunsViewProps> = ({ onNavigate }) => {
           </table>
         </div>
       </div>
+
+      {/* Quick Comparison Modal */}
+      {comparisonReport && (
+        <ReproductionComparisonModal
+          report={comparisonReport}
+          onClose={() => setComparisonReport(null)}
+        />
+      )}
     </div>
   );
 };

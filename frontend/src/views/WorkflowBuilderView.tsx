@@ -90,16 +90,23 @@ outputs:
 `;
 
 interface WorkflowBuilderViewProps {
-  onNavigate: (tab: string, runId?: string) => void;
-  workflowId?: string;
+  onNavigate: (tab: string, runId?: string, builderOpts?: any) => void;
+  initialWorkflowId?: string;
+  initialYamlContent?: string;
+  initialWorkflowName?: string;
 }
 
-export const WorkflowBuilderView: React.FC<WorkflowBuilderViewProps> = ({ onNavigate, workflowId }) => {
-  const [yamlContent, setYamlContent] = useState(INITIAL_YAML);
+export const WorkflowBuilderView: React.FC<WorkflowBuilderViewProps> = ({
+  onNavigate,
+  initialWorkflowId,
+  initialYamlContent,
+  initialWorkflowName
+}) => {
+  const [yamlContent, setYamlContent] = useState(initialYamlContent || INITIAL_YAML);
   const [isValid, setIsValid] = useState(true);
   const [validationErrors, setValidationErrors] = useState<any[]>([]);
-  const [activeWorkflowId, setActiveWorkflowId] = useState<string | null>(workflowId || null);
-  const [workflowName, setWorkflowName] = useState('Particle Collision Analysis');
+  const [activeWorkflowId, setActiveWorkflowId] = useState<string | null>(initialWorkflowId || null);
+  const [workflowName, setWorkflowName] = useState(initialWorkflowName || 'Particle Collision Analysis');
   const [workflowVersion, setWorkflowVersion] = useState(1);
   const [isExecuting, setIsExecuting] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -137,8 +144,36 @@ export const WorkflowBuilderView: React.FC<WorkflowBuilderViewProps> = ({ onNavi
 
   // Initial load or validation
   useEffect(() => {
-    handleValidate(yamlContent);
-  }, [handleValidate]);
+    async function init() {
+      if (initialWorkflowId) {
+        try {
+          const wf = await api.getWorkflow(initialWorkflowId);
+          setActiveWorkflowId(wf.id);
+          setWorkflowName(wf.name);
+          setWorkflowVersion(wf.version);
+          if (wf.raw_yaml) {
+            setYamlContent(wf.raw_yaml);
+            handleValidate(wf.raw_yaml);
+            return;
+          }
+        } catch (err) {
+          console.error('Failed to load workflow:', err);
+        }
+      }
+
+      if (initialYamlContent) {
+        setYamlContent(initialYamlContent);
+        if (initialWorkflowName) setWorkflowName(initialWorkflowName);
+        setActiveWorkflowId(null);
+        handleValidate(initialYamlContent);
+        return;
+      }
+
+      handleValidate(yamlContent);
+    }
+
+    init();
+  }, [initialWorkflowId, initialYamlContent, initialWorkflowName, handleValidate]);
 
   // Debounced YAML editor change
   const handleEditorChange = (value: string | undefined) => {
@@ -199,8 +234,26 @@ export const WorkflowBuilderView: React.FC<WorkflowBuilderViewProps> = ({ onNavi
   };
 
   const handleSaveDraft = async () => {
-    setFeedbackMsg({ type: 'success', text: 'Workflow draft saved locally with SHA-256 fingerprint.' });
-    setTimeout(() => setFeedbackMsg(null), 3000);
+    try {
+      if (!activeWorkflowId) {
+        const wf = await api.createWorkflow({
+          project_id: 'proj-particle-physics',
+          name: workflowName,
+          description: 'Saved workflow draft',
+          tags: ['draft'],
+          yaml_content: yamlContent
+        });
+        setActiveWorkflowId(wf.id);
+        setFeedbackMsg({ type: 'success', text: `Saved new workflow '${wf.name}' to registry.` });
+      } else {
+        const v = await api.publishVersion(activeWorkflowId, yamlContent);
+        setWorkflowVersion(v.version);
+        setFeedbackMsg({ type: 'success', text: `Published Version ${v.version}.0 to registry.` });
+      }
+      setTimeout(() => setFeedbackMsg(null), 3000);
+    } catch (err: any) {
+      setFeedbackMsg({ type: 'error', text: err.message || 'Failed to save workflow.' });
+    }
   };
 
   return (

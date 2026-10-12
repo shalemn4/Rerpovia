@@ -16,7 +16,8 @@ import {
   Download,
   AlertCircle,
   ExternalLink,
-  ChevronRight
+  ChevronRight,
+  GitCompare
 } from 'lucide-react';
 import { api } from '../api/client';
 import { RunDetail, LogEntry, ProvenanceGraphData, ReproductionReport } from '../types';
@@ -124,22 +125,22 @@ export const RunDetailView: React.FC<RunDetailViewProps> = ({ runId, onNavigate 
     setIsReproducing(true);
     try {
       const reproRes = await api.triggerReproduction(run.id);
-      // Wait a moment for execution and then compare
-      setTimeout(async () => {
-        try {
-          const report = await api.compareRuns(run.id, reproRes.new_run_id);
-          setReproductionReport(report);
-        } catch (cErr) {
-          console.error('Comparison error:', cErr);
-        }
-      }, 4000);
-
-      // Navigate to new run or notify
       onNavigate('run-detail', reproRes.new_run_id);
     } catch (err) {
       console.error('Failed to trigger reproduction:', err);
     } finally {
       setIsReproducing(false);
+    }
+  };
+
+  // Compare reproduction with original baseline
+  const handleCompareWithOriginal = async () => {
+    if (!run || !run.reproduction_of_run_id) return;
+    try {
+      const report = await api.compareRuns(run.reproduction_of_run_id, run.id);
+      setReproductionReport(report);
+    } catch (cErr) {
+      console.error('Comparison error:', cErr);
     }
   };
 
@@ -213,6 +214,17 @@ export const RunDetailView: React.FC<RunDetailViewProps> = ({ runId, onNavigate 
 
         {/* Operational Actions: Reproduce & Export */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {run.reproduction_of_run_id && isCompleted && (
+            <button
+              className="btn-reprovia-primary"
+              onClick={handleCompareWithOriginal}
+              style={{ background: 'var(--electric-blue)', borderColor: 'var(--navy-800)' }}
+            >
+              <GitCompare size={13} />
+              <span>Compare with Baseline Run</span>
+            </button>
+          )}
+
           {isCompleted && (
             <button
               className="btn-reprovia-primary"

@@ -21,6 +21,7 @@ export const App: React.FC = () => {
   const [uiMode, setUiMode] = useState<UIMode>('spatial');
   const [user, setUser] = useState<UserProfile | null>(null);
   const [projectName, setProjectName] = useState<string>('Particle Resonance Investigation');
+  const [builderOptions, setBuilderOptions] = useState<{ workflowId?: string; yamlContent?: string; name?: string } | null>(null);
 
   useEffect(() => {
     document.title = 'REPROVIA Reproducible Science Infrastructure';
@@ -38,9 +39,12 @@ export const App: React.FC = () => {
     initUser();
   }, []);
 
-  const handleNavigate = (tab: string, runId?: string) => {
+  const handleNavigate = (tab: string, runId?: string, builderOpts?: { workflowId?: string; yamlContent?: string; name?: string }) => {
     if (runId) {
       setActiveRunId(runId);
+    }
+    if (builderOpts) {
+      setBuilderOptions(builderOpts);
     }
     setActiveTab(tab);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -68,7 +72,14 @@ export const App: React.FC = () => {
         {/* View Routing */}
         {activeTab === 'dashboard' && <DashboardView onNavigate={handleNavigate} />}
         {activeTab === 'workflows' && <WorkflowsView onNavigate={handleNavigate} />}
-        {activeTab === 'builder' && <WorkflowBuilderView onNavigate={handleNavigate} />}
+        {activeTab === 'builder' && (
+          <WorkflowBuilderView
+            onNavigate={handleNavigate}
+            initialWorkflowId={builderOptions?.workflowId}
+            initialYamlContent={builderOptions?.yamlContent}
+            initialWorkflowName={builderOptions?.name}
+          />
+        )}
         {activeTab === 'runs' && <RunsView onNavigate={handleNavigate} />}
         {activeTab === 'run-detail' && <RunDetailView runId={activeRunId} onNavigate={handleNavigate} />}
         {activeTab === 'datasets' && <DatasetsView />}
